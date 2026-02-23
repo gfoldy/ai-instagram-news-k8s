@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: publisher
+  namespace: devops-cyber
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: publisher
+  template:
+    metadata:
+      labels:
+        app: publisher
+    spec:
+      imagePullSecrets:
+        - name: gitlab-registry
+      containers:
+        - name: publisher
+          image: registry.gitlab.com/gfoldy/devops-cyber-project-1/publisher:0.2
+          ports:
+            - containerPort: 8090
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: ai-news-db
+                  key: DATABASE_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: publisher
+  namespace: devops-cyber
+spec:
+  selector:
+    app: publisher
+  ports:
+    - port: 80
+      targetPort: 8090

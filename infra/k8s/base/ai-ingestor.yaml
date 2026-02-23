@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ai-ingestor
+  namespace: devops-cyber
+spec:
+  schedule: "*/5 * * * *"   # runs every 5 minutes
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          imagePullSecrets:
+            - name: gitlab-registry
+          restartPolicy: OnFailure
+          containers:
+            - name: ai-ingestor
+              image: registry.gitlab.com/gfoldy/devops-cyber-project-1/ai-ingestor:0.2
+              env:
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: ai-news-db
+                      key: DATABASE_URL

@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: summarizer
+  namespace: devops-cyber
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          imagePullSecrets:
+            - name: gitlab-registry
+          restartPolicy: OnFailure
+          containers:
+            - name: summarizer
+              image: registry.gitlab.com/gfoldy/devops-cyber-project-1/summarizer:0.3
+              env:
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: ai-news-db
+                      key: DATABASE_URL
+                - name: OPENAI_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: openai
+                      key: OPENAI_API_KEY
