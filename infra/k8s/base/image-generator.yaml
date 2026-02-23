@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: image-generator
+  namespace: devops-cyber
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: image-generator
+  template:
+    metadata:
+      labels:
+        app: image-generator
+    spec:
+      containers:
+        - name: image-generator
+          image: ghcr.io/gfoldy/ai-instagram-news-k8s/image-generator:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: OPENAI_API_KEY
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: image-generator
+  namespace: devops-cyber
+spec:
+  selector:
+    app: image-generator
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: ClusterIP
