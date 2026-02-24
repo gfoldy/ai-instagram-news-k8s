@@ -2,20 +2,36 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-pvc
-  namespace: devops-cyber
+  labels:
+    app: postgres
 spec:
-  storageClassName: local-path
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres
-  namespace: devops-cyber
+  labels:
+    app: postgres
 spec:
   replicas: 1
   selector:
@@ -26,35 +42,36 @@ spec:
       labels:
         app: postgres
     spec:
+      securityContext:
+        fsGroup: 999
       containers:
         - name: postgres
-          image: postgres:16
+          image: postgres:15
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5432
           env:
             - name: POSTGRES_DB
-              value: ai_news
+              value: posts
             - name: POSTGRES_USER
-              value: ai_news
+              value: postgres
+            # keep secret name consistent with your plan
             - name: POSTGRES_PASSWORD
-              value: ai_news
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret
+                  key: POSTGRES_PASSWORD
           volumeMounts:
-            - name: pgdata
+            - name: postgres-storage
               mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
       volumes:
-        - name: pgdata
+        - name: postgres-storage
           persistentVolumeClaim:
             claimName: postgres-pvc
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgres
-  namespace: devops-cyber
-spec:
-  selector:
-    app: postgres
-  ports:
-    - port: 5432
-      targetPort: 5432
-
