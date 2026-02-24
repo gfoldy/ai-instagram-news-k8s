@@ -2,7 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: publisher
-  namespace: devops-cyber
+  labels:
+    app: publisher
 spec:
   replicas: 1
   selector:
@@ -13,28 +14,55 @@ spec:
       labels:
         app: publisher
     spec:
-      imagePullSecrets:
-        - name: gitlab-registry
       containers:
         - name: publisher
-          image: registry.gitlab.com/gfoldy/devops-cyber-project-1/publisher:0.2
+          image: ghcr.io/gfoldy/ai-instagram-news-k8s/publisher:latest
+          imagePullPolicy: Always
           ports:
-            - containerPort: 8090
+            - containerPort: 8000
           env:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: ai-news-db
+                  name: database-secret
                   key: DATABASE_URL
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openai-secret
+                  key: OPENAI_API_KEY
+            # optional: only used if you enable publishing
+            - name: INSTAGRAM_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: instagram-secret
+                  key: INSTAGRAM_USERNAME
+              optional: true
+            - name: INSTAGRAM_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: instagram-secret
+                  key: INSTAGRAM_PASSWORD
+              optional: true
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "700m"
+              memory: "1Gi"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: publisher
-  namespace: devops-cyber
+  labels:
+    app: publisher
 spec:
+  type: ClusterIP
   selector:
     app: publisher
   ports:
-    - port: 80
-      targetPort: 8090
+    - name: http
+      port: 80
+      targetPort: 8000
