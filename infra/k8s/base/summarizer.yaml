@@ -2,27 +2,42 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: summarizer
-  namespace: devops-cyber
+  labels:
+    app: summarizer
 spec:
-  schedule: "*/5 * * * *"
+  # every 30 minutes (change whenever you want)
+  schedule: "*/30 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
   jobTemplate:
     spec:
+      backoffLimit: 2
       template:
+        metadata:
+          labels:
+            app: summarizer
         spec:
-          imagePullSecrets:
-            - name: gitlab-registry
           restartPolicy: OnFailure
           containers:
             - name: summarizer
-              image: registry.gitlab.com/gfoldy/devops-cyber-project-1/summarizer:0.3
+              image: ghcr.io/gfoldy/ai-instagram-news-k8s/summarizer:latest
+              imagePullPolicy: Always
               env:
                 - name: DATABASE_URL
                   valueFrom:
                     secretKeyRef:
-                      name: ai-news-db
+                      name: database-secret
                       key: DATABASE_URL
                 - name: OPENAI_API_KEY
                   valueFrom:
                     secretKeyRef:
-                      name: openai
+                      name: openai-secret
                       key: OPENAI_API_KEY
+              resources:
+                requests:
+                  cpu: "50m"
+                  memory: "128Mi"
+                limits:
+                  cpu: "500m"
+                  memory: "768Mi"
