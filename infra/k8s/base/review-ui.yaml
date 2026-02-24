@@ -2,7 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: review-ui
-  namespace: devops-cyber
+  labels:
+    app: review-ui
 spec:
   replicas: 1
   selector:
@@ -13,45 +14,37 @@ spec:
       labels:
         app: review-ui
     spec:
-      imagePullSecrets:
-        - name: gitlab-registry
       containers:
         - name: review-ui
-          image: registry.gitlab.com/gfoldy/devops-cyber-project-1/review-ui:0.3
+          image: ghcr.io/gfoldy/ai-instagram-news-k8s/review-ui:latest
+          imagePullPolicy: Always
           ports:
-            - containerPort: 8080
-
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 10
-
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 8080
-            initialDelaySeconds: 5
-            periodSeconds: 5
-
+            - containerPort: 8501
           env:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: ai-news-db
+                  name: database-secret
                   key: DATABASE_URL
-
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: review-ui
-  namespace: devops-cyber
+  labels:
+    app: review-ui
 spec:
+  type: ClusterIP
   selector:
     app: review-ui
   ports:
-    - port: 80
-      targetPort: 8080
-
+    - name: http
+      port: 80
+      targetPort: 8501
