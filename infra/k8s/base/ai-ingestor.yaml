@@ -2,22 +2,37 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: ai-ingestor
-  namespace: devops-cyber
+  labels:
+    app: ai-ingestor
 spec:
-  schedule: "*/5 * * * *"   # runs every 5 minutes
+  # every 30 minutes (change whenever you want)
+  schedule: "*/30 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
   jobTemplate:
     spec:
+      backoffLimit: 2
       template:
+        metadata:
+          labels:
+            app: ai-ingestor
         spec:
-          imagePullSecrets:
-            - name: gitlab-registry
           restartPolicy: OnFailure
           containers:
             - name: ai-ingestor
-              image: registry.gitlab.com/gfoldy/devops-cyber-project-1/ai-ingestor:0.2
+              image: ghcr.io/gfoldy/ai-instagram-news-k8s/ai-ingestor:latest
+              imagePullPolicy: Always
               env:
                 - name: DATABASE_URL
                   valueFrom:
                     secretKeyRef:
-                      name: ai-news-db
+                      name: database-secret
                       key: DATABASE_URL
+              resources:
+                requests:
+                  cpu: "50m"
+                  memory: "128Mi"
+                limits:
+                  cpu: "300m"
+                  memory: "512Mi"
