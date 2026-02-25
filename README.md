@@ -232,9 +232,3 @@ This is a production-style DevOps portfolio project demonstrating:
 Garrett Foldy  
 Cloud-Native / DevOps Portfolio Project
 """
-
-path = "/mnt/data/README.md"
-with open(path, "w", encoding="utf-8") as f:
-    f.write(readme)
-
-path
