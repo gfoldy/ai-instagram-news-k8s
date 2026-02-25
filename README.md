@@ -1,99 +1,106 @@
-🧠 AI Instagram News – Cloud Native Kubernetes App
-🚀 What This Is
-AI Instagram News is a cloud-native, Kubernetes-based web application that:
+🚀 AI Instagram News
+Cloud-Native Kubernetes Web Application
+🧠 What This Project Is
+AI Instagram News is a cloud-native Kubernetes application that:
 Collects content
-Generates AI-enhanced summaries and images
-Stores content in Postgres
-Provides a dashboard to review and approve posts
+Generates AI-enhanced summaries and captions
+Creates AI-based image prompts
+Stores content in PostgreSQL
+Provides a web dashboard for review
 Optionally publishes to Instagram
 Runs fully inside Kubernetes (k3s compatible)
-Is installable with a single bootstrap script
-This project is designed to demonstrate:
-Cloud-native architecture
-Microservices design
+It is designed as a production-style DevOps portfolio project demonstrating:
 Kubernetes deployments
+Microservices architecture
 Ingress routing
 CronJobs
 Secrets management
-Production-ready containerization
 GitHub Container Registry integration
+Infrastructure as Code
 🏗 Architecture Overview
-The system consists of:
-🧩 Microservices
+Services
 Service	Purpose
 review-ui	Web dashboard (Streamlit)
-publisher	AI image + post generation
-summarizer	AI content summarization
+publisher	AI caption + image prompt generation
+summarizer	AI text summarization
 ai-ingestor	Content ingestion pipeline
 postgres	Database
-🌐 Networking
-Services are ClusterIP
-Access is handled via Ingress
-No port-forwarding required
-Designed for VPS deployment
-Flow:
+🌐 Networking Flow
 Browser
    ↓
-Ingress (80)
+Ingress (Port 80)
    ↓
-review-ui service (80)
+review-ui Service (ClusterIP: 80)
    ↓
-review-ui container (8501)
-⚙️ What It Does
-1️⃣ Ingest Content
-A CronJob ingests content from configured sources.
-2️⃣ Generate AI Content
+review-ui Container (8501)
+All services use ClusterIP
+External access is handled through Ingress
+No port-forwarding required
+⚙️ What The Application Does
+Ingest Content
+A Kubernetes CronJob collects content from configured sources.
+Generate AI Content
 Uses OpenAI API to:
 Summarize text
 Generate captions
 Create image prompts
-3️⃣ Store Data
-Posts are saved in Postgres.
-4️⃣ Review Dashboard
-User logs into dashboard to:
+Store Data
+Posts are stored in PostgreSQL inside the cluster.
+Review Dashboard
+The user accesses a web dashboard to:
 Review generated posts
 Approve or reject content
-5️⃣ Optional Publishing
+Optional Publishing
 If Instagram credentials are provided, posts can be published automatically.
 🧰 Requirements
-Before installing, you need:
+Before installing:
 Linux machine (Ubuntu recommended)
 Internet access
-Sudo access
+Sudo privileges
 OpenAI API key
 Optional:
 Instagram credentials
+You do NOT need a PostgreSQL account.
+The database runs inside Kubernetes.
 🛠 Installation (One Command)
-Step 1 — Clone Repo
+1️⃣ Clone the Repository
 git clone https://github.com/gfoldy/ai-instagram-news-k8s.git
 cd ai-instagram-news-k8s
-Step 2 — Run Bootstrap Script
+2️⃣ Run the Bootstrap Script
 sudo ./scripts/bootstrap.sh
 The script will:
 Install k3s
 Create namespace
-Install all manifests
-Set up Postgres
-Deploy all services
-Create Ingress
-🔐 When You Will Be Prompted
-During installation, you will be asked to enter:
-OpenAI API Key
-Postgres password (you create this)
+Deploy PostgreSQL
+Deploy all microservices
+Create Kubernetes secrets
+Configure Ingress
+Start CronJobs
+🔐 During Installation You Will Be Prompted For:
+OpenAI API key
+PostgreSQL password (you create this)
 Instagram credentials (optional)
-⚠️ You do NOT need a Postgres account.
-The database runs inside Kubernetes.
-You simply create a password for your internal database.
+Again — PostgreSQL runs inside the cluster.
+You are just creating the internal database password.
 🌐 Accessing The App
-After installation completes:
+After installation:
 Find your server IP:
 ip addr
 Then open in browser:
 http://<server-ip>
-If deployed on VPS:
+If deployed on a VPS:
 http://<public-ip>
 You should see the Review Dashboard.
-📂 File Structure
+🧪 Verifying Installation
+Check running pods:
+kubectl -n ai-news get pods
+Expected output:
+review-ui     Running
+publisher     Running
+postgres      Running
+Check ingress:
+kubectl -n ai-news get ingress
+📂 Project Structure
 .
 ├── infra/k8s/base
 │   ├── ai-ingestor.yaml
@@ -102,7 +109,7 @@ You should see the Review Dashboard.
 │   ├── postgres.yaml
 │   ├── publisher.yaml
 │   ├── review-ui.yaml
-│   ├── summarizer.yaml
+│   └── summarizer.yaml
 │
 ├── scripts
 │   └── bootstrap.sh
@@ -116,63 +123,35 @@ You should see the Review Dashboard.
 │
 └── .github/workflows
     └── build.yml
-🧪 Verifying Installation
-Check pods:
-kubectl -n ai-news get pods
-You should see:
-review-ui   Running
-publisher   Running
-postgres    Running
-Check ingress:
-kubectl -n ai-news get ingress
-🔁 CronJobs Behavior
-The system includes scheduled jobs for:
-Content ingestion
-AI processing
-Publishing
-They are configured to:
-Run on schedule
-Complete
-Not create infinite pods
-Respect resource limits
-🔧 How To Update The App
+🔁 Updating The Application
 Pull latest changes:
 git pull
 Reapply manifests:
 kubectl apply -f infra/k8s/base/
-Or re-run:
+Or re-run installer:
 sudo ./scripts/bootstrap.sh
 🛡 Security Model
 Secrets stored in Kubernetes secrets
 No credentials hardcoded
-Services isolated via namespace
+Namespace isolation
 Ingress controls public access
-📈 Production Deployment
+📈 Production Deployment Recommendations
 For real-world deployment:
 Use a VPS
-Point DNS to server IP
-Add TLS certificate (Cert-Manager)
-Use external Postgres (optional)
+Add DNS pointing to server IP
+Add TLS (Cert-Manager)
 Add authentication to dashboard
-Configure rate limits
-🧠 Why This Project Matters
+Configure rate limiting
+Add monitoring (Prometheus/Grafana)
+💡 Why This Project Matters
 This project demonstrates:
 Real Kubernetes architecture
 Multi-service orchestration
-CI/CD integration
-Container registry usage
-Production thinking
-Infrastructure as Code
-Cloud-native design
-This is not a toy Docker app.
-This is a real cloud-native deployment.
-🔥 Future Improvements
-Dashboard authentication
-Role-based access
-External Postgres support
-Observability (Prometheus/Grafana)
-Horizontal pod autoscaling
-Production TLS
+CI/CD container builds
+Production-style networking
+Cloud-native design principles
+This is not a simple Docker demo.
+It is a fully structured Kubernetes deployment.
 👨‍💻 Author
 Garrett Foldy
-Cloud-Native / DevOps / Kubernetes Portfolio Project
+DevOps / Cloud-Native / Kubernetes Portfolio Project
